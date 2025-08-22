@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Conecta Verde — Juega, aprende y gana</title>
+  <meta name="description" content="Conecta Verde: retos, trivias y minijuegos para reducir residuos. Aprende, juega y compite con tu colegio.">
+  <meta name="color-scheme" content="light dark">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* ============== TOKENS (Nuevo look, súper contraste) ============== */
+    :root{
+      --bg: #0a0c10;           /* fondo detrás de los blobs */
+      --ink: #0d1321;          /* texto principal claro-mode */
+      --ink-strong:#06090f;
+      --muted:#3a5168;
+      --panel: rgba(255,255,255,.92);
+      --panel-2: rgba(255,255,255,.70);
+      --border: rgba(8,12,20,.12);
+      --ring:#98f5e1;
+
+      --brand:#38f8a5;         /* verde neón */
+      --brand2:#57b7ff;        /* azul neón */
+      --accent:#ff8bd4;        /* magenta acento */
+
+      --ok:#22c55e; --warn:#f59e0b; --danger:#ef4444;
+
+      --shadow-lg: 0 30px 100px rgba(0,0,0,.30);
+      --shadow:    0 14px 40px rgba(0,0,0,.16);
+      --radius: 18px;
+    }
+    .theme-light{
+      --page: radial-gradient(1100px 800px at 10% -20%, rgba(87,183,255,.25), transparent 60%),
+              radial-gradient(1200px 900px at 120% 10%, rgba(56,248,165,.25), transparent 55%),
+              #f7fbff;
+      --ink: #0d1321;
+      --muted:#415a77;
+      --panel: rgba(255,255,255,.92);
+      --panel-2: rgba(255,255,255,.76);
+      --border: rgba(10,15,25,.10);
+    }
+    .theme-dark{
+      --page: radial-gradient(1200px 900px at -10% -20%, rgba(87,183,255,.16), transparent 55%),
+              radial-gradient(1100px 700px at 110% 0%, rgba(56,248,165,.15), transparent 60%),
+              #0a0c10;
+      --ink: #eaf2ff;
+      --muted:#c2d4ea;
+      --panel: rgba(11,16,26,.82);
+      --panel-2: rgba(11,16,26,.68);
+      --border: rgba(255,255,255,.14);
+    }
+
+    *{box-sizing:border-box}
+    html,body{
+      margin:0; padding:0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: var(--page);
+      color: var(--ink);
+      scroll-behavior: smooth;
+    }
+
+    /* fondo animado: blobs + partículas */
+    #fx{position:fixed; inset:0; z-index:0; pointer-events:none}
+
+    /* contenido por encima */
+    .nav,.hero,main,.footer,.modal{position:relative; z-index:1}
+
+    /* ==================== NAV (glassy) ==================== */
+    .nav{
+      position:sticky; top:0; z-index:20;
+      border-bottom:1px solid var(--border);
+      background: color-mix(in oklab, var(--page) 70%, transparent);
+      -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    }
+    .wrap{max-width:1250px; margin:0 auto; padding:16px 18px}
+    .row{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
+    .brand{display:flex; align-items:center; gap:12px}
+    .logo{
+      height:46px; width:46px; border-radius:14px; display:grid; place-items:center;
+      background: conic-gradient(from 200deg,var(--brand),var(--brand2),var(--accent));
+      color:#001015; font-weight:800; box-shadow: var(--shadow);
+    }
+    .btn{
+      border:1px solid var(--border); background:var(--panel);
+      color:var(--ink); padding:10px 14px; border-radius:12px; cursor:pointer;
+      transition: transform .15s ease, box-shadow .15s ease, background .2s ease, color .2s ease;
+      box-shadow: var(--shadow);
+    }
+    .btn:hover{transform: translateY(-1px)}
+    .btn:focus-visible{outline:3px solid var(--ring); outline-offset:2px}
+    .btn.primary{
+      border:none; color:#001014;
+      background: linear-gradient(135deg, var(--brand) 0%, var(--brand2) 52%, var(--accent) 100%);
+      font-weight:700;
+    }
+    .chip{
+      display:inline-flex; gap:8px; align-items:center; padding:6px 10px; border-radius:999px;
+      border:1px solid var(--border); background:var(--panel-2); color:var(--ink); font-size:12px
+    }
+
+    /* ==================== HERO ==================== */
+    .hero .wrap{padding:76px 18px 44px}
+    h1{font-size: clamp(34px, 5.5vw, 64px); line-height:1.04; margin:10px 0 8px; letter-spacing:-.02em}
+    .lead{font-size: clamp(15px, 2.2vw, 19px); color:var(--muted); max-width:920px}
+    .cta{display:flex; gap:10px; flex-wrap:wrap; margin-top:18px}
+    .badges{display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap:12px; margin-top:16px}
+    @media (max-width:900px){ .badges{grid-template-columns:1fr 1fr} }
+
+    /* ==================== SECTIONS / CARDS ==================== */
+    section{padding:48px 0}
+    .title{font-size:clamp(22px, 3.5vw, 32px); margin:0 0 6px; letter-spacing:-.01em}
+    .subtitle{margin:0 0 20px; color:var(--muted)}
+    .grid{display:grid; gap:18px}
+    .g-3{grid-template-columns: repeat(3, minmax(0,1fr))}
+    .g-2{grid-template-columns: repeat(2, minmax(0,1fr))}
+    @media (max-width:960px){ .g-3,.g-2{grid-template-columns:1fr} }
+
+    .card{
+      position:relative; border:1px solid var(--border); background:var(--panel);
+      border-radius: var(--radius); padding:18px; box-shadow: var(--shadow-lg); backdrop-filter: blur(10px);
+      transform: translateZ(0);
+    }
+    .card:hover{transform: translateY(-2px); transition:.22s ease}
+    .icon{font-size:24px}
+
+    /* PASOS */
+    .steps{display:grid; grid-template-columns: repeat(5,1fr); gap:14px}
+    @media (max-width:1200px){ .steps{grid-template-columns:1fr 1fr 1fr} }
+    @media (max-width:820px){ .steps{grid-template-columns:1fr 1fr} }
+    @media (max-width:520px){ .steps{grid-template-columns:1fr} }
+    .step{padding:18px; border-radius: var(--radius); border:1px solid var(--border); background:var(--panel); box-shadow: var(--shadow)}
+    .step .num{position:absolute; top:10px; right:12px; font-weight:800; color:var(--accent)}
+    .step h3{margin:0 0 6px}
+
+    /* TABS */
+    .tabs{display:flex; gap:10px; flex-wrap:wrap}
+    .tab{
+      padding:10px 14px; border-radius:12px; border:1px solid var(--border); background:var(--panel);
+      cursor:pointer; color:var(--ink); transition: transform .1s ease, background .2s ease;
+    }
+    .tab:hover{transform: translateY(-1px)}
+    .tab.active{
+      background: linear-gradient(135deg, var(--brand), var(--brand2)); color:#001014;
+      border-color: transparent; font-weight:700;
+    }
+
+    /* TABLE */
+    table{width:100%; border-collapse:separate; border-spacing:0; overflow:hidden; border:1px solid var(--border); border-radius:16px}
+    th,td{padding:12px 14px; border-bottom:1px solid var(--border); text-align:left}
+    th{background: linear-gradient(180deg, rgba(87,183,255,.15), transparent 80%); color:var(--ink-strong)}
+    .theme-dark th{background: linear-gradient(180deg, rgba(87,183,255,.08), transparent 80%); color:#dbeafe}
+    tr:last-child td{border-bottom:none}
+
+    /* GAMES */
+    .bins{display:grid; grid-template-columns:repeat(3,1fr); gap:12px}
+    .bin{border:2px dashed var(--border); border-radius:14px; padding:16px; min-height:120px; display:grid; place-items:center; color:#1e3a5f; background:rgba(87,183,255,.10)}
+    .theme-dark .bin{background: rgba(87,183,255,.08); color:#cfe5ff}
+    .item{display:inline-block; padding:8px 12px; margin:6px; border-radius:10px; background:var(--panel); border:1px solid var(--border); cursor:grab}
+
+    .grid-mem{display:grid; grid-template-columns:repeat(4,1fr); gap:10px}
+    .card-mem{height:86px; border-radius:12px; border:1px solid var(--border); display:grid; place-items:center; background:var(--panel); cursor:pointer; font-size:26px}
+
+    /* MODAL & FOOTER */
+    .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(2,8,23,.50)}
+    .modal .box{background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:20px; width:min(92vw,460px); box-shadow: var(--shadow-lg)}
+    .footer{border-top:1px solid var(--border); padding:26px 18px; color:#8fb2d6; font-size:14px; text-align:center}
+    .theme-light .footer{color:#40607a}
+  </style>
+</head>
+<body class="theme-light">
+  <!-- BACKGROUND FX -->
+  <canvas id="fx" aria-hidden="true"></canvas>
+
+  <!-- NAV -->
+  <nav class="nav" role="navigation" aria-label="principal">
+    <div class="wrap row">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">⚡</div>
+        <strong>Conecta Verde</strong>
+      </div>
+      <div class="row" style="gap:8px">
+        <a href="#inicio" class="btn navlink">Inicio</a>
+        <a href="#pasos" class="btn navlink">Pasos</a>
+        <a href="#retos" class="btn navlink req-login">Retos</a>
+        <a href="#trivia" class="btn navlink req-login">Trivia</a>
+        <a href="#juegos" class="btn navlink req-login">Juegos</a>
+        <a href="#guias" class="btn navlink">Guías</a>
+        <a href="#ranking" class="btn navlink req-login">Ranking</a>
+        <a href="#tutoriales" class="btn navlink">Tutoriales</a>
+        <button class="btn" id="themeBtn" aria-pressed="false">🌙 Oscuro</button>
+        <button class="btn primary" id="openLogin">Iniciar sesión</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero" id="inicio">
+    <div class="wrap">
+      <span class="chip">Blog juvenil · Juegos · Monedas · Retos</span>
+      <h1>Juega, aprende y <span style="background:linear-gradient(90deg,var(--brand),var(--brand2),var(--accent)); -webkit-background-clip:text; background-clip:text; color:transparent">gana hábitos sostenibles</span></h1>
+      <p class="lead">Reduce residuos, reutiliza materiales y compite con toda tu promo. Sube evidencia, responde trivias, juega minijuegos y canjea premios.</p>
+      <div class="cta">
+        <a href="#retos" class="btn primary navlink req-login">🚀 Empieza el reto</a>
+        <a href="#guias" class="btn navlink">📘 Ver guías</a>
+      </div>
+      <div class="badges" aria-hidden="true">
+        <div class="chip">🏆 Ranking en vivo</div>
+        <div class="chip">🪙 Monedas & premios</div>
+        <div class="chip">🎧 Sonidos & animaciones</div>
+        <div class="chip">🌗 Modo claro/oscuro</div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- PASOS -->
+    <section id="pasos">
+      <div class="wrap">
+        <h2 class="title">Reducir residuos en 5 pasos</h2>
+        <p class="subtitle">Guía rápida: cada paso tiene un reto relacionado en la app.</p>
+        <div class="steps">
+          <article class="step" tabindex="0"><span class="num">1</span><h3>Reduce el consumo</h3><ul class="subtitle"><li>Evita compras impulsivas</li><li>Prefiere objetos duraderos</li></ul></article>
+          <article class="step" tabindex="0"><span class="num">2</span><h3>Reutiliza</h3><ul class="subtitle"><li>Da segunda vida a envases y ropa</li><li>Haz trueques</li></ul></article>
+          <article class="step" tabindex="0"><span class="num">3</span><h3>Recicla bien</h3><ul class="subtitle"><li>Separa plástico, papel/cartón, vidrio y metales</li><li>Limpia y compacta</li></ul></article>
+          <article class="step" tabindex="0"><span class="num">4</span><h3>Ahorra energía y agua</h3><ul class="subtitle"><li>Apaga y desconecta</li><li>Repara fugas</li></ul></article>
+          <article class="step" tabindex="0"><span class="num">5</span><h3>Comparte y participa</h3><ul class="subtitle"><li>Dona lo que no uses</li><li>Únete a campañas</li></ul></article>
+        </div>
+      </div>
+    </section>
+
+    <!-- TABS -->
+    <section>
+      <div class="wrap">
+        <div class="tabs" id="tabs" role="tablist" aria-label="secciones">
+          <button class="tab" data-target="#pasos" role="tab">Pasos</button>
+          <button class="tab" data-target="#retos" role="tab">Retos</button>
+          <button class="tab" data-target="#trivia" role="tab">Trivia</button>
+          <button class="tab" data-target="#juegos" role="tab">Juegos</button>
+          <button class="tab" data-target="#guias" role="tab">Guías</button>
+          <button class="tab" data-target="#edad" role="tab">Por edades</button>
+          <button class="tab" data-target="#ranking" role="tab">Ranking</button>
+          <button class="tab" data-target="#tutoriales" role="tab">Tutoriales</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RETOS (evidencia obligatoria) -->
+    <section id="retos" style="display:none">
+      <div class="wrap">
+        <h2 class="title">Retos con evidencia</h2>
+        <p class="subtitle">Sube una foto como prueba. +10🪙 por reto completado.</p>
+        <div class="grid g-3">
+          <div class="card" data-step="1">
+            <div class="row" style="justify-content:space-between"><div class="icon">🧭</div><span class="chip">+10🪙</span></div>
+            <h3 style="margin:8px 0 4px">Mini auditoría</h3>
+            <p class="subtitle">Clasifica tu basura 1 día (orgánico/reciclable/no reciclable).</p>
+            <input type="file" accept="image/*" data-proof aria-label="Subir evidencia 1">
+            <button class="btn primary" data-complete disabled>Marcar completado</button>
+            <div class="subtitle" data-preview></div>
+          </div>
+          <div class="card" data-step="2">
+            <div class="row" style="justify-content:space-between"><div class="icon">🛒</div><span class="chip">+10🪙</span></div>
+            <h3 style="margin:8px 0 4px">Compra con cabeza</h3>
+            <p class="subtitle">Usa bolsa reutilizable y evita botellas por 24h.</p>
+            <input type="file" accept="image/*" data-proof aria-label="Subir evidencia 2">
+            <button class="btn primary" data-complete disabled>Marcar completado</button>
+            <div class="subtitle" data-preview></div>
+          </div>
+          <div class="card" data-step="3">
+            <div class="row" style="justify-content:space-between"><div class="icon">🔁</div><span class="chip">+10🪙</span></div>
+            <h3 style="margin:8px 0 4px">Reusa & repara</h3>
+            <p class="subtitle">Da segunda vida a un frasco, cuaderno o prenda.</p>
+            <input type="file" accept="image/*" data-proof aria-label="Subir evidencia 3">
+            <button class="btn primary" data-complete disabled>Marcar completado</button>
+            <div class="subtitle" data-preview></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TRIVIA -->
+    <section id="trivia" style="display:none">
+      <div class="wrap">
+        <h2 class="title">Trivia ecológica</h2>
+        <p class="subtitle">Elige dificultad y responde 5 preguntas. Ganas monedas por acierto.</p>
+        <div class="card">
+          <div class="row" style="gap:8px; flex-wrap:wrap; margin-bottom:10px">
+            <select id="qLevel" class="btn" aria-label="Dificultad">
+              <option value="basica">Básica (+2🪙/acierto)</option>
+              <option value="intermedia">Intermedia (+3🪙/acierto)</option>
+              <option value="experta">Experta (+5🪙/acierto)</option>
+            </select>
+            <button class="btn primary" id="qStart">Iniciar</button>
+            <span class="chip">Correctas: <b id="qScore">0</b>/5</span>
+          </div>
+          <div id="qBox" style="display:none">
+            <div id="qText" style="font-weight:700; margin-bottom:8px">—</div>
+            <div id="qOpts" class="grid g-2"></div>
+            <div class="row" style="margin-top:12px">
+              <button class="btn" id="qNext" disabled>Siguiente</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- JUEGOS -->
+    <section id="juegos" style="display:none">
+      <div class="wrap">
+        <h2 class="title">Minijuegos</h2>
+        <p class="subtitle">Aprende jugando. ¡Suma monedas extra!</p>
+        <div class="grid g-2">
+          <div class="card">
+            <h3>Clasifica rápido ♻️ (+12🪙)</h3>
+            <p class="subtitle">Arrastra cada ítem al contenedor correcto: Orgánico, Reciclable o No reciclable.</p>
+            <div id="items" class="card" style="min-height:60px"></div>
+            <div class="bins" style="margin-top:10px">
+              <div class="bin" data-accept="organico">Orgánico</div>
+              <div class="bin" data-accept="reciclable">Reciclable</div>
+              <div class="bin" data-accept="no">No reciclable</div>
+            </div>
+            <div class="row" style="margin-top:10px; gap:8px">
+              <span class="chip">Correctos: <b id="ddScore">0</b>/6</span>
+              <button class="btn" id="ddReset">Reiniciar</button>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Memoria eco 🧠 (+12🪙)</h3>
+            <p class="subtitle">Encuentra las parejas de materiales.</p>
+            <div class="grid-mem" id="memGrid"></div>
+            <div class="row" style="margin-top:10px; gap:8px">
+              <span class="chip">Parejas: <b id="memPairs">0</b>/6</span>
+              <button class="btn" id="memReset">Reiniciar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GUÍAS -->
+    <section id="guias" style="display:none">
+      <div class="wrap">
+        <h2 class="title">Guías para reciclar y crear</h2>
+        <p class="subtitle">Recursos prácticos y rápidos para reducir, reutilizar y reciclar.</p>
+        <div class="grid g-3">
+          <div class="card"><div class="icon">📄</div><h3>Cartón y papel</h3>
+            <ul class="subtitle"><li>Cuadernos reciclados</li><li>Cajas organizadoras</li><li>Papel artesanal</li></ul>
+          </div>
+          <div class="card"><div class="icon">🥤</div><h3>Plásticos (PET)</h3>
+            <ul class="subtitle"><li>Macetas y lapiceros</li><li>Riego por goteo casero</li><li>Lavar y compactar</li></ul>
+          </div>
+          <div class="card"><div class="icon">🍶</div><h3>Vidrio</h3>
+            <ul class="subtitle"><li>Portavelas y vasos</li><li>Quitar etiquetas</li><li>Entrega segura</li></ul>
+          </div>
+          <div class="card"><div class="icon">🥫</div><h3>Metales</h3>
+            <ul class="subtitle"><li>Portalápices / lámparas</li><li>Aplastar y enjuagar</li><li>Upcycling creativo</li></ul>
+          </div>
+          <div class="card"><div class="icon">🧵</div><h3>Textiles</h3>
+            <ul class="subtitle"><li>Bolsas con remeras</li><li>Parcheo visible</li><li>Trueques</li></ul>
+          </div>
+          <div class="card"><div class="icon">🌱</div><h3>Orgánicos</h3>
+            <ul class="subtitle"><li>Compostaje simple</li><li>Qué va / no va</li><li>Usar el compost</li></ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- POR EDADES -->
+    <section id="edad" style="display:none">
+      <div class="wrap">
+        <h2 class="title">Actividades por edad</h2>
+        <div class="grid g-3">
+          <div class="card"><div class="icon">🧒</div><h3>5–10 años</h3>
+            <ul class="subtitle"><li>Separar por colores</li><li>Dibujo del ciclo</li><li>Maceta con botella</li></ul>
+          </div>
+          <div class="card"><div class="icon">👦</div><h3>10–17 años</h3>
+            <ul class="subtitle"><li>Trueque</li><li>Mini auditoría</li><li>Trivia + retos</li></ul>
+          </div>
+          <div class="card"><div class="icon">🧑</div><h3>17+ años</h3>
+            <ul class="subtitle"><li>Compostaje básico</li><li>Compra a granel</li><li>Ecopuntos locales</li></ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RANKING -->
+    <section id="ranking" style="display:none">
+      <div class="wrap">
+        <h2 class="title">Ranking</h2>
+        <p class="subtitle">Crea tu cuenta, inicia sesión y compite. Tu progreso se guarda por cuenta.</p>
+        <div class="card" style="margin-bottom:14px">
+          <div class="row" style="gap:8px; flex-wrap:wrap">
+            <span class="chip">Usuario: <b id="who">—</b></span>
+            <span class="chip">Monedas: <b id="coins">0</b></span>
+          </div>
+        </div>
+        <div class="card">
+          <table>
+            <thead><tr><th>#</th><th>Jugador</th><th>Edad</th><th>Monedas</th></tr></thead>
+            <tbody id="rankBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TUTORIALES -->
+    <section id="tutoriales" style="display:none">
+      <div class="wrap">
+        <h2 class="title">Tutoriales de YouTube</h2>
+        <p class="subtitle">Aprende con creadores eco. Puedes cambiar los videos por los que prefieras.</p>
+        <div class="grid g-2">
+          <div class="card">
+            <iframe width="100%" height="315" src="https://www.youtube.com/embed/WVrxkF6TcQU" title="Tutorial 1" frameborder="0" allowfullscreen></iframe>
+          </div>
+          <div class="card">
+            <iframe width="100%" height="315" src="https://www.youtube.com/embed/-UFFFUTMlCw" title="Tutorial 2" frameborder="0" allowfullscreen></iframe>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      Hecho con 💚 · Conecta Verde · Modo claro/oscuro | Fondo animado | Monedas, Ranking, Juegos & Guías
+      <br><strong>Creado por: Grupo 2 SJLS</strong>
+    </div>
+  </footer>
+
+  <!-- MODAL LOGIN -->
+  <div class="modal" id="authModal" aria-modal="true" role="dialog">
+    <div class="box">
+      <h3 style="margin:0 0 10px">Crear cuenta / Iniciar sesión</h3>
+      <p class="subtitle">Tu progreso (monedas y retos) se guarda por cuenta en este dispositivo.</p>
+      <div class="row" style="gap:8px; flex-wrap:wrap; margin:8px 0 12px">
+        <input class="btn" id="nick" placeholder="Tu nombre" style="min-width:220px"/>
+        <select id="edadSel" class="btn" aria-label="rango de edad">
+          <option value="5-10">5–10</option>
+          <option value="10-17">10–17</option>
+          <option value="17+">17+</option>
+        </select>
+        <button class="btn primary" id="loginBtn">Entrar</button>
+      </div>
+      <div class="subtitle">Consejo: usa el mismo nombre para mantener tu progreso.</div>
+    </div>
+  </div>
+
+  <!-- SFX -->
+  <audio id="s-coin" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg" preload="auto"></audio>
+  <audio id="s-ok"   src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg" preload="auto"></audio>
+
+  <script>
+    /* ===== Utils ===== */
+    const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+    const play=id=>{const a=$(id); a&&a.play&&a.play();};
+
+    /* ===== Theme Toggle (nuevo: clases theme-light/theme-dark) ===== */
+    const THEME_KEY='cv_theme2';
+    const root=document.body;
+    const saved=localStorage.getItem(THEME_KEY)||'light';
+    if(saved==='dark'){ root.classList.remove('theme-light'); root.classList.add('theme-dark'); }
+    document.getElementById('themeBtn').textContent = saved==='dark' ? '☀️ Claro' : '🌙 Oscuro';
+    document.getElementById('themeBtn').setAttribute('aria-pressed', saved==='dark');
+    document.getElementById('themeBtn').addEventListener('click', ()=>{
+      const dark=root.classList.toggle('theme-dark');
+      if(dark) root.classList.remove('theme-light'); else root.classList.add('theme-light');
+      localStorage.setItem(THEME_KEY, dark?'dark':'light');
+      document.getElementById('themeBtn').textContent = dark ? '☀️ Claro' : '🌙 Oscuro';
+      document.getElementById('themeBtn').setAttribute('aria-pressed', dark);
+    });
+
+    /* ===== Fondo animado: blobs + partículas (Canvas) ===== */
+    const cvs=document.getElementById('fx'), ctx=cvs.getContext('2d');
+    let W,H; const blobs=[], dots=[];
+    function onResize(){ W=cvs.width=innerWidth; H=cvs.height=innerHeight; }
+    addEventListener('resize', onResize); onResize();
+
+    function makeBlob(){
+      const r=120+Math.random()*200, x=Math.random()*W, y=Math.random()*H;
+      const c1=`hsla(${140+Math.random()*40}, 90%, 60%, .20)`, c2=`hsla(${200+Math.random()*30}, 90%, 60%, .18)`;
+      return {x,y,r,dx:(-0.3+Math.random()*0.6), dy:(-0.3+Math.random()*0.6), c1, c2};
+    }
+    function makeDot(){ return {x:Math.random()*W, y:Math.random()*H, r:1+Math.random()*2, v:(.2+Math.random()*1), a:Math.random()*Math.PI*2}; }
+    for(let i=0;i<4;i++) blobs.push(makeBlob());
+    for(let i=0;i<90;i++) dots.push(makeDot());
+
+    function paint(){
+      ctx.clearRect(0,0,W,H);
+      // dots
+      ctx.globalCompositeOperation='lighter';
+      ctx.fillStyle='rgba(255,255,255,.08)';
+      dots.forEach(d=>{ d.x+=Math.cos(d.a)*d.v; d.y+=Math.sin(d.a)*d.v; if(d.x<0||d.x>W||d.y<0||d.y>H){ d.x=Math.random()*W; d.y=Math.random()*H; } ctx.beginPath(); ctx.arc(d.x,d.y,d.r,0,Math.PI*2); ctx.fill(); });
+      // blobs
+      ctx.globalCompositeOperation='screen';
+      blobs.forEach(b=>{
+        b.x+=b.dx; b.y+=b.dy; if(b.x<-200||b.x>W+200) b.dx*=-1; if(b.y<-200||b.y>H+200) b.dy*=-1;
+        const g=ctx.createRadialGradient(b.x,b.y,b.r*0.1,b.x,b.y,b.r);
+        g.addColorStop(0,b.c1); g.addColorStop(1,'transparent');
+        ctx.fillStyle=g; ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.fill();
+      });
+      requestAnimationFrame(paint);
+    }
+    paint();
+
+    /* ===== Estado / Cuentas ===== */
+    const ACC_KEY='cv_accounts', CUR_KEY='cv_current';
+    let accounts=JSON.parse(localStorage.getItem(ACC_KEY)||'{}');
+    let current=JSON.parse(localStorage.getItem(CUR_KEY)||'null');
+    function saveAcc(){ localStorage.setItem(ACC_KEY, JSON.stringify(accounts)); }
+    function saveCur(){ localStorage.setItem(CUR_KEY, JSON.stringify(current)); renderRank(); renderUser(); }
+    function renderUser(){ $('#who').textContent=current?current.nick:'—'; $('#coins').textContent=current?(accounts[current.nick]?.coins||0):0; }
+
+    function openLogin(){ $('#authModal').style.display='flex'; $('#nick').focus(); }
+    function closeLogin(){ $('#authModal').style.display='none'; }
+    $('#openLogin').addEventListener('click', openLogin);
+    $('#loginBtn').addEventListener('click', ()=>{
+      const nick=$('#nick').value.trim(); const age=$('#edadSel').value;
+      if(!nick) return alert('Escribe tu nombre');
+      if(!accounts[nick]) accounts[nick]={age,coins:0,retos:{}};
+      current={nick}; saveAcc(); saveCur(); closeLogin(); play('#s-ok'); alert('¡Bienvenido, '+nick+'!');
+    });
+
+    /* ===== Navegación ===== */
+    function showSection(target){
+      ['#inicio','#pasos','#retos','#trivia','#juegos','#guias','#edad','#ranking','#tutoriales']
+        .forEach(id=> $(id).style.display=(id===target?'block':'none'));
+      $$('#tabs .tab').forEach(x=> x.classList.toggle('active', x.getAttribute('data-target')===target));
+      if(target==='#trivia'){ startQuiz(); }
+    }
+    $$('.navlink').forEach(a=>{
+      a.addEventListener('click', e=>{
+        const target=a.getAttribute('href');
+        if(a.classList.contains('req-login') && !current){ e.preventDefault(); openLogin(); return; }
+        showSection(target); location.hash=target.replace('#','');
+      });
+    });
+    $$('#tabs .tab').forEach(t=>{
+      t.addEventListener('click', ()=>{
+        const target=t.getAttribute('data-target');
+        if(['#retos','#trivia','#juegos','#ranking'].includes(target) && !current){ openLogin(); return; }
+        showSection(target); location.hash=target.replace('#','');
+      });
+    });
+    if(location.hash){ showSection('#'+location.hash.replace('#','')); } else { showSection('#inicio'); }
+
+    /* ===== Ranking & Monedas ===== */
+    function renderRank(){
+      const tbody=$('#rankBody'); if(!tbody) return; tbody.innerHTML='';
+      const rows=Object.entries(accounts).map(([nick,data])=>({nick,age:data.age,coins:data.coins||0})).sort((a,b)=>b.coins-a.coins).slice(0,20);
+      rows.forEach((r,i)=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${i+1}</td><td>${r.nick}</td><td>${r.age}</td><td>${r.coins}</td>`; tbody.appendChild(tr); });
+    }
+    function addCoins(n){ if(!current){ openLogin(); return false; } const u=accounts[current.nick]; u.coins=(u.coins||0)+n; saveAcc(); saveCur(); play('#s-coin'); return true; }
+
+    /* ===== Retos (evidencias) ===== */
+    $$('#retos [data-step]').forEach(card=>{
+      const step=card.getAttribute('data-step');
+      const proof=card.querySelector('[data-proof]');
+      const btn=card.querySelector('[data-complete]');
+      const prev=card.querySelector('[data-preview]');
+      function refresh(){ if(!current) return; const done=accounts[current.nick]?.retos?.[step]; if(done){ btn.disabled=true; btn.textContent='Completado ✅'; } }
+      proof.addEventListener('change', e=>{ const f=e.target.files[0]; if(f){ prev.textContent='Evidencia: '+f.name; btn.disabled=false; } });
+      btn.addEventListener('click', ()=>{ if(!current){ openLogin(); return; } if(addCoins(10)){ accounts[current.nick].retos[step]=true; saveAcc(); btn.disabled=true; btn.textContent='Completado ✅'; } });
+      refresh();
+    });
+
+    /* ===== Trivia ===== */
+    const TRIVIA={
+      basica:[
+        {q:'¿Qué color suele usarse para papel/cartón?',opts:['Azul','Amarillo','Verde','Rojo'],a:0},
+        {q:'¿Qué va al orgánico?',opts:['Cáscaras','Tapas plásticas','Latas','Vidrio'],a:0},
+        {q:'¿Qué es PET?',opts:['Botellas plásticas','Pilas','Ropa','Madera'],a:0},
+        {q:'Antes de reciclar un envase debes…',opts:['Quemarlo','Enjuagarlo','Aplastarlo siempre','Pintarlo'],a:1},
+        {q:'¿Cuál NO es reciclable?',opts:['Cartón limpio','Papel higiénico usado','Vidrio','Latas'],a:1}
+      ],
+      intermedia:[
+        {q:'El vidrio tarda en degradarse…',opts:['Semanas','Años','Siglos','Meses'],a:2},
+        {q:'El compost necesita…',opts:['Solo plástico','Materia orgánica','Vidrio','Metal'],a:1},
+        {q:'Mejor opción de compra sostenible:',opts:['Desechable barato','A granel con envase propio','Plástico extra','Empaque triple'],a:1},
+        {q:'Para reciclar latas de aluminio debes…',opts:['Dejarlas sucias','Aplastar y limpiar','Romperlas','Pintarlas'],a:1},
+        {q:'¿Qué símbolo indica reciclaje?',opts:['♻️','⚠️','❌','🔁'],a:0}
+      ],
+      experta:[
+        {q:'La economía circular busca…',opts:['Producir y desechar','Mantener materiales en uso','Quemar residuos','Exportar basura'],a:1},
+        {q:'Los RAEE son…',opts:['Residuos de aparatos eléctricos/electrónicos','Residuos orgánicos','Rocas y arenas','Restos agrícolas'],a:0},
+        {q:'En compost, evitar…',opts:['Cáscaras','Café molido','Aceites y grasas','Hojas secas'],a:2},
+        {q:'El plástico con mayor reciclaje a nivel doméstico es…',opts:['PS','PET','PVC','PC'],a:1},
+        {q:'La huella de carbono se reduce principalmente con…',opts:['Más empaques','Reutilizar y reducir','Tirar todo','Quemar residuos'],a:1}
+      ]
+    };
+    let qList=[],qi=0,qScore=0,perHit=2;
+    function startQuiz(){
+      if(!current){ openLogin(); return; }
+      const lvl=$('#qLevel').value; perHit=(lvl==='basica'?2:(lvl==='intermedia'?3:5));
+      const pool=[...TRIVIA[lvl]]; qList=[];
+      for(let i=0;i<5;i++){ qList.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]); }
+      qi=0; qScore=0; $('#qScore').textContent=qScore; $('#qBox').style.display='block'; renderQ();
+    }
+    $('#qStart').addEventListener('click', startQuiz);
+    function renderQ(){
+      const cur=qList[qi]; $('#qText').textContent=`(${qi+1}/5) ${cur.q}`;
+      const box=$('#qOpts'); box.innerHTML=''; $('#qNext').disabled=true;
+      cur.opts.forEach((op,idx)=>{
+        const b=document.createElement('button'); b.className='btn'; b.textContent=op;
+        b.addEventListener('click',()=>{
+          $$('#qOpts .btn').forEach(x=>x.disabled=true);
+          if(idx===cur.a){ b.style.background='linear-gradient(135deg, var(--brand), var(--brand2))'; b.style.color='#001014'; qScore++; addCoins(perHit); }
+          $('#qScore').textContent=qScore; $('#qNext').disabled=false;
+        });
+        box.appendChild(b);
+      });
+    }
+    $('#qNext').addEventListener('click',()=>{
+      qi++; if(qi>=5){ alert('¡Listo! Correctas: '+qScore+'/5'); $('#qBox').style.display='none'; return; } renderQ();
+    });
+
+    /* ===== Drag & Drop ===== */
+    const ITEMS_POOL=[
+      {t:'Cáscaras de fruta',k:'organico'},{t:'Botella PET',k:'reciclable'},{t:'Papel limpio',k:'reciclable'},
+      {t:'Servilleta usada',k:'no'},{t:'Lata de aluminio',k:'reciclable'},{t:'Restos de verduras',k:'organico'}
+    ];
+    function setupDD(){
+      const box=$('#items'); if(!box) return; box.innerHTML=''; $('#ddScore') && ($('#ddScore').textContent='0'); let ok=0;
+      ITEMS_POOL.sort(()=>Math.random()-0.5).forEach((it,i)=>{
+        const s=document.createElement('span'); s.className='item'; s.draggable=true; s.textContent=it.t; s.dataset.k=it.k; s.dataset.id=i; box.appendChild(s);
+        s.addEventListener('dragstart', e=>{ e.dataTransfer.setData('k',it.k); e.dataTransfer.setData('id',i); });
+      });
+      $$('.bin').forEach(bin=>{
+        bin.addEventListener('dragover', e=> e.preventDefault());
+        bin.addEventListener('drop', e=>{
+          e.preventDefault();
+          const k=e.dataTransfer.getData('k'); const id=e.dataTransfer.getData('id');
+          if(id==null) return;
+          if(bin.dataset.accept===k){
+            ok++; $('#ddScore').textContent=ok;
+            const itm=[...$('#items').children].find(x=>x.dataset.id===id); itm && itm.remove();
+            if(ok>=6){ if(addCoins(12)) alert('¡Perfecto! +12🪙'); }
+          }else{ alert('Ups, contenedor incorrecto'); }
+        });
+      });
+      $('#ddReset') && ($('#ddReset').onclick=setupDD);
+    }
+
+    /* ===== Memoria ===== */
+    const ICONS=['🧃','🍾','📦','🥫','📰','🍌'];
+    function setupMem(){
+      const grid=$('#memGrid'); if(!grid) return; grid.innerHTML=''; $('#memPairs') && ($('#memPairs').textContent='0');
+      const arr=[...ICONS,...ICONS].sort(()=>Math.random()-0.5); let open=null,pairs=0;
+      arr.forEach((c)=>{
+        const d=document.createElement('div'); d.className='card-mem'; d.dataset.v=c; d.textContent='?'; grid.appendChild(d);
+        d.addEventListener('click',()=>{
+          if(d.classList.contains('done')||d.textContent!=='?') return;
+          d.textContent=c;
+          if(!open){ open=d; }
+          else{
+            if(open.dataset.v===c){ open.classList.add('done'); d.classList.add('done'); pairs++; $('#memPairs').textContent=pairs; open=null; if(pairs>=6){ if(addCoins(12)) alert('¡Memory completo! +12🪙'); } }
+            else{ const a=open; setTimeout(()=>{ a.textContent='?'; d.textContent='?'; open=null; },600); }
+          }
+        });
+      });
+      $('#memReset') && ($('#memReset').onclick=setupMem);
+    }
+
+    /* init */
+    renderUser(); renderRank(); setupDD(); setupMem();
+  </script>
+</body>
+</html>
